@@ -11,7 +11,7 @@ ledPin = 26          # connected to LED
 BUZZER_PIN = 27 # connected to buzzer
 
 URL = "https://api.thingspeak.com/update"
-API_KEY = "FYA23COAQ8WVN5G7" # update your API Key here
+API_KEY = "PABH1AZ1LLJRBPCU" # update your API Key here
 
 led_status = 0
 buzzer_status = 0
