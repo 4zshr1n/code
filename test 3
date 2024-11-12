@@ -10,7 +10,7 @@ ECHO = 24            # connected to ultrasonic echo
 ledPin = 26          # connected to LED
 BUZZER_PIN = 27 # connected to buzzer
 
-URL = "https://thingspeak.mathworks.com/channels/2725979/private_show"
+URL = "https://api.thingspeak.com/update"
 API_KEY = "FYA23COAQ8WVN5G7" # update your API Key here
 
 led_status = 0
