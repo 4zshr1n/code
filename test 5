@@ -1,0 +1,93 @@
+import RPi.GPIO as GPIO
+import time
+import requests
+
+# Program constants
+TRIGGER_PIN = 23
+ECHO_PIN = 24
+LED_PIN = 26
+BUZZER_PIN = 27
+URL = "https://api.thingspeak.com/update"
+API_KEY = "IWM8JK2OIHE74D1H"
+
+# Initialize statuses
+led_status = 0
+buzzer_status = 0
+
+def setup_rpi():
+    """Setup GPIO pins for the Raspberry Pi."""
+    print("Setting up GPIO pins...")
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(TRIGGER_PIN, GPIO.OUT)
+    GPIO.setup(ECHO_PIN, GPIO.IN)
+    GPIO.setup(LED_PIN, GPIO.OUT)
+    GPIO.setup(BUZZER_PIN, GPIO.OUT)
+    set_default_values()
+
+def set_default_values():
+    """Set initial values for GPIO pins."""
+    GPIO.output(TRIGGER_PIN, GPIO.LOW)
+    GPIO.output(LED_PIN, GPIO.LOW)
+    GPIO.output(BUZZER_PIN, GPIO.LOW)
+
+def send_data_to_thingSpeak(distance, led, buzzer):
+    """Send data to ThingSpeak."""
+    payload = {'api_key': API_KEY, 'field1': distance, 'field2': led, 'field3': buzzer}
+    try:
+        response = requests.post(URL, data=payload)
+        if response.status_code == 200:
+            print("Data sent to ThingSpeak successfully.")
+        else:
+            print(f"Failed to send data, status code: {response.status_code}")
+    except requests.RequestException as e:
+        print(f"Network error: {e}")
+
+def check_for_object(distance):
+    """Turn on LED and buzzer if an object is close."""
+    global led_status, buzzer_status
+    if distance < 15:
+        led_status, buzzer_status = 1, 1
+        GPIO.output(LED_PIN, GPIO.HIGH)
+        GPIO.output(BUZZER_PIN, GPIO.HIGH)
+        print("Object detected: Too close!")
+    else:
+        led_status, buzzer_status = 0, 0
+        GPIO.output(LED_PIN, GPIO.LOW)
+        GPIO.output(BUZZER_PIN, GPIO.LOW)
+        print("No object detected.")
+
+def estimate_distance():
+    """Measure distance using ultrasonic sensor and send data to ThingSpeak."""
+    try:
+        while True:
+            # Send pulse
+            GPIO.output(TRIGGER_PIN, True)
+            time.sleep(0.00001)  # 10 microseconds delay
+            GPIO.output(TRIGGER_PIN, False)
+
+            # Measure echo
+            start_time, end_time = time.time(), time.time()
+            while GPIO.input(ECHO_PIN) == 0:
+                start_time = time.time()
+            while GPIO.input(ECHO_PIN) == 1:
+                end_time = time.time()
+
+            # Calculate distance
+            pulse_duration = end_time - start_time
+            distance = round((34300 * pulse_duration) / 2, 2)
+            print(f"Distance: {distance} cm")
+
+            # Check object distance and send data
+            check_for_object(distance)
+            send_data_to_thingSpeak(distance, led_status, buzzer_status)
+            time.sleep(1)
+
+    except KeyboardInterrupt:
+        print("Measurement stopped by User")
+    finally:
+        GPIO.cleanup()  # Reset GPIO on exit
+
+if _name_ == '_main_':
+    setup_rpi()
+    print("Sensor initialized. Starting measurement...")
+    estimate_distance()
