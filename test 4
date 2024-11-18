@@ -8,7 +8,7 @@ ECHO_PIN = 24
 LED_PIN = 26
 BUZZER_PIN = 27
 URL = "https://api.thingspeak.com/update"
-API_KEY = "IWM8JK2OIHE74D1H"
+API_KEY = "PABH1AZ1LLJRBPCU"
 
 # Initialize statuses
 led_status = 0
